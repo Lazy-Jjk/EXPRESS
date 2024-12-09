@@ -1,53 +1,41 @@
 const express = require('express');
-const bodyParser = require('body-parser');
-const cors = require('cors');
-
 const app = express();
 const PORT = 3000;
 
-app.use(cors());
-app.use(bodyParser.json());
+app.use(express.json());
 
-let students = []; // This will act as our in-memory database
+let students = [];
 
-// Create a new student (POST)
+// Create a student
 app.post('/students', (req, res) => {
-    const student = req.body;
-    students.push(student);
-    res.status(201).send(student);
+    students.push(req.body);
+    res.status(201).send(req.body);
 });
 
-// Read all students (GET)
-app.get('/students', (req, res) => {
-    res.send(students);
-});
+// Get all students
+app.get('/students', (req, res) => res.send(students));
 
-// Read a single student (GET)
+// Get a student by ID
 app.get('/students/:id', (req, res) => {
     const student = students.find(s => s.id === parseInt(req.params.id));
-    if (!student) return res.status(404).send('Student not found');
-    res.send(student);
+    student ? res.send(student) : res.status(404).send('Student not found');
 });
 
-// Update a student (PUT)
+// Update a student by ID
 app.put('/students/:id', (req, res) => {
     const student = students.find(s => s.id === parseInt(req.params.id));
-    if (!student) return res.status(404).send('Student not found');
-
-    // Update student details
-    Object.assign(student, req.body);
-    res.send(student);
+    if (student) {
+        Object.assign(student, req.body);
+        res.send(student);
+    } else {
+        res.status(404).send('Student not found');
+    }
 });
 
-// Delete a student (DELETE)
+// Delete a student by ID
 app.delete('/students/:id', (req, res) => {
-    const studentIndex = students.findIndex(s => s.id === parseInt(req.params.id));
-    if (studentIndex === -1) return res.status(404).send('Student not found');
-
-    students.splice(studentIndex, 1);
-    res.status(204).send();
+    const index = students.findIndex(s => s.id === parseInt(req.params.id));
+    index !== -1 ? (students.splice(index, 1), res.sendStatus(204)) : res.status(404).send('Student not found');
 });
 
-app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
-});
+app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
